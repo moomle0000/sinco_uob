@@ -134,6 +134,7 @@ void controalWindow()
       delay(12000);
       digitalWrite(in3, LOW);
       digitalWrite(in4, LOW);
+      isSwitchOn = false;
     }
     if (temperature <= 12.0 && controaltime == 0)
     {
@@ -145,6 +146,7 @@ void controalWindow()
       delay(12000);
       digitalWrite(in3, LOW);
       digitalWrite(in4, LOW);
+      isSwitchOn = false;
     }
   }
   else
