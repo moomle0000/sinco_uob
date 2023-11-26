@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "C:\\Users\\LM\\Documents\\Arduino\\generated_examples\\StreamHttpClient"
+		},
+		{
+			"name": "test",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"system_error": "cpp",
+			"regex": "cpp",
+			"iostream": "cpp"
+		}
+	}
+}
