@@ -9,6 +9,7 @@
 #define WIFI_PASS "jf981103"
 
 // main setup function
+// It initializes the serial communication, sets the pin modes for various pins, sets up the WiFi connection, sets up a SinricPro connection, and begins a server.
 void setup()
 {
   Serial.begin(BAUD_RATE);
@@ -38,7 +39,7 @@ void loop()
 void beginServer()
 {
   server.on("/", handleRoot);
-  server.on("/lm", requestHandlerarq);
+  server.on("/device", requestHandlerarq);
   server.begin();
   Serial.println("HTTP server started");
 }

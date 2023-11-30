@@ -9,7 +9,9 @@
         "vector": "cpp",
         "string_view": "cpp",
         "initializer_list": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp"
     },
     "maven.view": "hierarchical"
 }
