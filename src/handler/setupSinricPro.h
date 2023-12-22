@@ -171,7 +171,7 @@ void handleTemperaturesensor()
 }
 void openwindow(int time)
 {
-  Serial.println("Window opened");
+  // Serial.println("Window opened");
   controaltime = 1;
   digitalWrite(in3, HIGH);
   digitalWrite(in4, LOW);
@@ -182,14 +182,14 @@ void openwindow(int time)
 
 void closewindow(int time)
 {
-  Serial.println("Window closed");
+  // Serial.println("Window closed");
   controaltime = 1;
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH);
   delay(time);
   digitalWrite(in3, LOW);
   digitalWrite(in4, LOW);
-  isSwitchOn = false;
+
 }
 
 bool windowmoded = false;
@@ -202,18 +202,21 @@ void controalWindow()
     //// open
     int temp = (int)temperature;
 
-    unsigned long actualMillis = millis();
-    if (actualMillis - lastEvent < EVENT_WAIT_TIME)
-      return;
-    if (temp <= temperatureset && windowmoded && controaltime == 0)
+    // unsigned long actualMillis = millis();
+    // if (actualMillis - lastEvent < EVENT_WAIT_TIME)
+    //   return;
+
+
+      
+      
+
+    if (dht.readTemperature() < temperatureset)
+    {
+      closewindow(12000);
+    }
+    if (dht.readTemperature() > temperatureset)
     {
       openwindow(12000);
-      Serial.println('openwindow telph');
-    }
-    if (temp > temperatureset && windowmoded && controaltime == 0)
-    {
-      closewindow(2000);
-      Serial.println('closewindow ');
     }
   }
   else
