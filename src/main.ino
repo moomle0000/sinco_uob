@@ -14,8 +14,8 @@ void setup()
 {
   Serial.begin(BAUD_RATE);
   Serial.printf("\r\n\r\n");
-  // dht.begin();
-  pinMode(23, OUTPUT); // red
+  dht.begin();
+  // pinMode(23, OUTPUT); // red
   pinMode(enA, OUTPUT);
   pinMode(enB, OUTPUT);
   pinMode(in1, OUTPUT);

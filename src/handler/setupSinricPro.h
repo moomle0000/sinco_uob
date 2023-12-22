@@ -8,10 +8,10 @@
 
 #define windowmode "65625fc2031135be133ebc28"
 #define windowmoderamg "65635fbf031135be133f393b"
-#define BAUD_RATE 115200      // Change baudrate to your need (used for serial monitor)
-#define EVENT_WAIT_TIME 60000 // send event every 60 seconds
+#define BAUD_RATE 115200     // Change baudrate to your need (used for serial monitor)
+#define EVENT_WAIT_TIME 3000 // send event every 60 seconds
 
-#define DHT_SENSOR_PIN 23     // ESP32 pin GPIO23 connected to DHT11
+#define DHT_SENSOR_PIN 21     // ESP32 pin GPIO23 connected to DHT11
 #define DHT_SENSOR_TYPE DHT11 // DHT11 sensor type
 
 bool isSwitchOn = false;
@@ -22,8 +22,8 @@ DHT dht(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
 #define TEMP_SENSOR_ID "656259c2a3c6b579a1afe4cc"
 #define BAUD_RATE 115200      // Change baudrate to your need (used for serial monitor)
 #define EVENT_WAIT_TIME 20000 // send event every 60 seconds
-
-#define DHT_PIN 23
+int lastloop = 9;
+#define DHT_PIN 21
 
 bool deviceIsOn;                              // Temeprature sensor on/off state
 float temperature;                            // actual temperature
@@ -34,7 +34,7 @@ unsigned long lastEvent = (-EVENT_WAIT_TIME); // last time event has been sent  
 
 int temperatureset;
 
-int controaltime = 0;
+bool controaltime = false;
 
 bool globalPowerState;
 std::map<String, int> globalRangeValues;
@@ -48,13 +48,13 @@ bool PowerState(String deviceId, bool &state)
       Serial.printf("Switch OFF\n");
       isSwitchOn = false;
       // Your code to perform an action when the switch is turned OFF
-      controaltime = 0;
+      controaltime = true;
     }
     else
     {
       Serial.printf("Switch ON\n");
       isSwitchOn = true;
-      controaltime = 0;
+      controaltime = true;
 
       // Your code to perform an action when the switch is turned ON
     }
@@ -143,85 +143,152 @@ void handleTemperaturesensor()
                                        //  temperature = dht.getTemperature() * 1.8f + 32;  // get actual temperature in °F
   humidity = dht.readHumidity();       // get actual humidity
 
-  if (isnan(temperature) || isnan(humidity))
-  {                                           // reading failed...
-    Serial.printf("DHT reading failed!\r\n"); // print error message
-    return;                                   // try again next time
-  }
+  // if (isnan(temperature) || isnan(humidity))
+  // {                                           // reading failed...
+  //   Serial.printf("DHT reading failed!\r\n"); // print error message
+  //   return;                                   // try again next time
+  // }
 
-  Serial.println("Temperature: " + String(temperature) + "°C Humidity: " + String(humidity) + "%");
+  // Serial.println("Temperature: " + String(temperature) + "°C Humidity: " + String(humidity) + "%");
 
   if (temperature == lastTemperature || humidity == lastHumidity)
     return; // if no values changed do nothing...
 
   SinricProTemperaturesensor &mySensor = SinricPro[TEMP_SENSOR_ID];    // get temperaturesensor device
   bool success = mySensor.sendTemperatureEvent(temperature, humidity); // send event
-  if (success)
-  { // if event was sent successfuly, print temperature and humidity to serial
-    Serial.printf("Temperature: %2.1f Celsius\tHumidity: %2.1f%%\r\n", temperature, humidity);
-  }
-  else
-  { // if sending event failed, print error message
-    Serial.printf("Something went wrong...could not send Event to server!\r\n");
-  }
+  // if (success)
+  // { // if event was sent successfuly, print temperature and humidity to serial
+  //   Serial.printf("Temperature: %2.1f Celsius\tHumidity: %2.1f%%\r\n", temperature, humidity);
+  // }
+  // else
+  // { // if sending event failed, print error message
+  //   Serial.printf("Something went wrong...could not send Event to server!\r\n");
+  // }
 
   lastTemperature = temperature; // save actual temperature for next compare
   lastHumidity = humidity;       // save actual humidity for next compare
   lastEvent = actualMillis;      // save actual time for next compare
 }
+
+void stopMotor()
+{
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+}
 void openwindow(int time)
 {
   // Serial.println("Window opened");
-  controaltime = 1;
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
-  delay(time);
+  controaltime = true;
   digitalWrite(in3, LOW);
-  digitalWrite(in4, LOW);
+  digitalWrite(in4, HIGH);
+  // delay(time);
+  // stopMotor();
 }
 
 void closewindow(int time)
 {
   // Serial.println("Window closed");
-  controaltime = 1;
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, HIGH);
-  delay(time);
-  digitalWrite(in3, LOW);
+  controaltime = true;
+  digitalWrite(in3, HIGH);
   digitalWrite(in4, LOW);
-
+  // delay(time);
+  // stopMotor();
 }
 
-bool windowmoded = false;
+bool windowmoded = true;
+
 void controalWindow()
 {
   if (isSwitchOn)
   {
-    windowmoded = controaltime == 0 ? true : false;
-
-    //// open
-    int temp = (int)temperature;
-
     // unsigned long actualMillis = millis();
     // if (actualMillis - lastEvent < EVENT_WAIT_TIME)
+    // {
+    //   lastloop = 13000;
     //   return;
+    // }
 
+    float floatValue = static_cast<float>(temperatureset);
 
-      
-      
-
-    if (dht.readTemperature() < temperatureset)
+    if (dht.readTemperature() > floatValue)
     {
-      closewindow(12000);
+      for (int i = 0; i < lastloop; i++)
+      {
+
+        lastloop = lastloop - i;
+        if (lastloop == 1)
+        {
+          stopMotor();
+          delay(1000);
+          // Serial.println(lastloop);
+          // Serial.print("open: ");
+
+          // Serial.print("Temperature: ");
+          // Serial.println(temperature);
+
+          // Serial.print("floatValue: ");
+          // Serial.println(floatValue);
+        }
+        if (lastloop > 1)
+        {
+          delay(1000);
+          Serial.println(lastloop);
+          openwindow(13000);
+        }
+      }
+
+      // Serial.printf("Temperature: %2.1f temperatureset: \r\n", temp, temperatureset);
+      // openwindow(13000);
     }
-    if (dht.readTemperature() > temperatureset)
+
+    if (dht.readTemperature() < floatValue)
     {
-      openwindow(12000);
+      for (int i = 0; i < lastloop; i++)
+      {
+        lastloop = lastloop - i;
+        if (lastloop == 1)
+        {
+          stopMotor();
+          delay(1000);
+          // delay(1000);
+          // Serial.println(lastloop);
+          // Serial.print("close: ");
+
+          // Serial.print("Temperature: ");
+          // Serial.println(temperature);
+
+          // Serial.print("floatValue: ");
+          // Serial.println(floatValue);
+        }
+
+        if (lastloop > 1)
+        {
+          delay(1000);
+          Serial.println(lastloop);
+          closewindow(13000);
+        }
+      }
     }
+
+    unsigned long actualMillis = millis();
+    if (actualMillis - lastEvent < EVENT_WAIT_TIME)
+    {
+      Serial.print(lastloop);
+      if (lastloop == 1)
+      {
+        lastloop = 9;
+      }
+      else
+      {
+        lastloop = 1;
+      }
+      return;
+    }
+
+    windowmoded = controaltime == true ? false : true;
   }
   else
   {
-    digitalWrite(in3, LOW);
-    digitalWrite(in4, LOW);
+    stopMotor();
   }
 }
