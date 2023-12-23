@@ -45,14 +45,14 @@ bool PowerState(String deviceId, bool &state)
     Serial.println('Window mode turned ' + state ? "on" : "off");
     if (isSwitchOn)
     {
-      Serial.printf("Switch OFF\n");
+      Serial.printf("Window mode turned OFF\n");
       isSwitchOn = false;
       // Your code to perform an action when the switch is turned OFF
       controaltime = true;
     }
     else
     {
-      Serial.printf("Switch ON\n");
+      Serial.printf("Window mode turned ON\n");
       isSwitchOn = true;
       controaltime = true;
 
@@ -107,34 +107,26 @@ bool onAdjustRangeValue(const String &deviceId, const String &instance, int &val
 
 void setupSinricPro()
 {
-
   // PowerStateController
   temperaturerang.onPowerState(PowerState);
-
   // RangeController
   temperaturerang.onRangeValue("temperaturerange", onRangeValue);
   temperaturerang.onAdjustRangeValue("temperaturerange", onAdjustRangeValue);
   // add device to SinricPro
   SinricProTemperaturesensor &mySensor = SinricPro[TEMP_SENSOR_ID];
   mySensor.onPowerState(PowerState);
-
   SinricProSwitch &mySwitch = SinricPro[windowmode];
   mySwitch.onPowerState(PowerState);
-
   // setup SinricPro
   SinricPro.onConnected([]()
                         { Serial.printf("Connected to SinricPro\r\n"); });
   SinricPro.onDisconnected([]()
                            { Serial.printf("Disconnected from SinricPro\r\n"); });
-
   SinricPro.begin(APP_KEY, APP_SECRET);
 }
 
 void handleTemperaturesensor()
 {
-  if (deviceIsOn == false)
-    return; // device is off...do nothing
-
   unsigned long actualMillis = millis();
   if (actualMillis - lastEvent < EVENT_WAIT_TIME)
     return; // only check every EVENT_WAIT_TIME milliseconds
@@ -201,44 +193,24 @@ void controalWindow()
 {
   if (isSwitchOn)
   {
-    // unsigned long actualMillis = millis();
-    // if (actualMillis - lastEvent < EVENT_WAIT_TIME)
-    // {
-    //   lastloop = 13000;
-    //   return;
-    // }
-
     float floatValue = static_cast<float>(temperatureset);
-
     if (dht.readTemperature() > floatValue)
     {
       for (int i = 0; i < lastloop; i++)
       {
-
         lastloop = lastloop - i;
         if (lastloop == 1)
         {
           stopMotor();
           delay(1000);
-          // Serial.println(lastloop);
-          // Serial.print("open: ");
-
-          // Serial.print("Temperature: ");
-          // Serial.println(temperature);
-
-          // Serial.print("floatValue: ");
-          // Serial.println(floatValue);
         }
         if (lastloop > 1)
         {
-          delay(1000);
-          Serial.println(lastloop);
+          // Serial.println(lastloop);
           openwindow(13000);
+          delay(1000);
         }
       }
-
-      // Serial.printf("Temperature: %2.1f temperatureset: \r\n", temp, temperatureset);
-      // openwindow(13000);
     }
 
     if (dht.readTemperature() < floatValue)
@@ -250,39 +222,26 @@ void controalWindow()
         {
           stopMotor();
           delay(1000);
-          // delay(1000);
-          // Serial.println(lastloop);
-          // Serial.print("close: ");
-
-          // Serial.print("Temperature: ");
-          // Serial.println(temperature);
-
-          // Serial.print("floatValue: ");
-          // Serial.println(floatValue);
         }
 
         if (lastloop > 1)
         {
-          delay(1000);
-          Serial.println(lastloop);
+          // Serial.println(lastloop);
           closewindow(13000);
+          delay(1000);
         }
       }
     }
 
     unsigned long actualMillis = millis();
-    if (actualMillis - lastEvent < EVENT_WAIT_TIME)
+    if (actualMillis - lastEvent < EVENT_WAIT_TIME && !temperature == lastTemperature)
     {
-      Serial.print(lastloop);
-      if (lastloop == 1)
-      {
-        lastloop = 9;
-      }
-      else
-      {
-        lastloop = 1;
-      }
+      lastloop = 9;
       return;
+    }
+    else
+    {
+      lastloop = 1;
     }
 
     windowmoded = controaltime == true ? false : true;
